@@ -260,6 +260,7 @@ order by 1;
 ## Query Results
 
 ### Top 5 Brands by Month (Sample Results)
+
 | scan_month | brand_name | receipt_count | total_spend | avg_spend_per_receipt | brand_status | month_rank |
 |------------|------------|---------------|-------------|----------------------|--------------|------------|
 | 2021-02-01 | MISSION | 2 | $4.46 | $2.23 | missing from brands table | 1 |
@@ -267,14 +268,10 @@ order by 1;
 | 2021-01-01 | BEN AND JERRYS | 32 | $7,264.59 | $227.02 | missing from brands table | 1 |
 | 2021-01-01 | FOLGERS | 23 | $599.29 | $26.06 | missing from brands table | 2 |
 | 2021-01-01 | Pepsi | 23 | $848.94 | $36.91 | valid brand | 3 |
-| 2021-01-01 | KELLOGG'S | 22 | $117.07 | $5.32 | missing from brands table | 4 |
-| 2021-01-01 | Kraft | 22 | $133.53 | $6.07 | valid brand | 5 |
 
 Key observations:
 - BEN AND JERRYS had the highest spend per receipt ($227.02) in January 2021
-- Several major brands (BEN AND JERRYS, FOLGERS, KELLOGG'S) are missing from the brands table
-- Tied receipt counts (e.g., FOLGERS and Pepsi with 23, KELLOGG'S and Kraft with 22) are ranked sequentially
-- February 2021 shows significantly lower activity with only 2 brands meeting the criteria
+- Several major brands (BEN AND JERRYS, FOLGERS) are missing from the brands table
 
 ### Average Spend by Receipt Status
 | rewardsreceiptstatus | receipt_count | avg_spend |
