@@ -180,13 +180,11 @@ order by item_count desc;
 
 -- User activity analysis
 WITH all_users AS (
-    -- Get all users from both tables
     SELECT _id as user_id FROM users
     UNION
     SELECT userid FROM receipts WHERE userid NOT IN (SELECT _id FROM users)
 ),
 user_receipts AS (
-    -- Count receipts for all users (including missing ones)
     SELECT 
         au.user_id,
         count(r.receipts_id) as receipt_count,

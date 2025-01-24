@@ -258,7 +258,65 @@ order by 1;
 ```
 
 ## Query Results
-[Add your query results here]
+
+### Top 5 Brands by Month (Sample Results)
+| scan_month | brand_name | receipt_count | total_spend | avg_spend_per_receipt | brand_status | month_rank |
+|------------|------------|---------------|-------------|----------------------|--------------|------------|
+| 2021-02-01 | MISSION | 2 | $4.46 | $2.23 | missing from brands table | 1 |
+| 2021-02-01 | Viva | 1 | $3.92 | $3.92 | valid brand | 2 |
+| 2021-01-01 | BEN AND JERRYS | 32 | $7,264.59 | $227.02 | missing from brands table | 1 |
+| 2021-01-01 | FOLGERS | 23 | $599.29 | $26.06 | missing from brands table | 2 |
+| 2021-01-01 | Pepsi | 23 | $848.94 | $36.91 | valid brand | 3 |
+| 2021-01-01 | KELLOGG'S | 22 | $117.07 | $5.32 | missing from brands table | 4 |
+| 2021-01-01 | Kraft | 22 | $133.53 | $6.07 | valid brand | 5 |
+
+Key observations:
+- BEN AND JERRYS had the highest spend per receipt ($227.02) in January 2021
+- Several major brands (BEN AND JERRYS, FOLGERS, KELLOGG'S) are missing from the brands table
+- Tied receipt counts (e.g., FOLGERS and Pepsi with 23, KELLOGG'S and Kraft with 22) are ranked sequentially
+- February 2021 shows significantly lower activity with only 2 brands meeting the criteria
+
+### Average Spend by Receipt Status
+| rewardsreceiptstatus | receipt_count | avg_spend |
+|---------------------|---------------|------------|
+| FLAGGED | 46 | $180.45 |
+| FINISHED | 518 | $80.85 |
+| PENDING | 50 | $28.03 |
+| REJECTED | 71 | $23.33 |
+| SUBMITTED | 434 | NULL |
+
+Key observations:
+- FLAGGED receipts have the highest average spend at $180.45
+- SUBMITTED receipts have NULL spend values as they haven't been processed yet
+- REJECTED receipts have the lowest average spend at $23.33
+
+### Total Items by Receipt Status
+| rewardsreceiptstatus | receipt_count | total_items_purchased |
+|---------------------|---------------|---------------------|
+| FINISHED | 518 | 8,184 |
+| FLAGGED | 46 | 1,014 |
+| REJECTED | 71 | 173 |
+| SUBMITTED | 434 | NULL |
+| PENDING | 50 | NULL |
+
+Key observations:
+- FINISHED receipts account for most items purchased
+- SUBMITTED and PENDING receipts have NULL item counts as they haven't been processed
+- REJECTED receipts have relatively few items per receipt
+
+### User Activity Analysis
+| activity_level | user_status | user_count | percentage |
+|---------------|-------------|------------|------------|
+| No receipts | Valid User | 45 | 35.71 |
+| 1 receipt | Valid User | 28 | 22.22 |
+| 2-5 receipts | Valid User | 38 | 30.16 |
+| 6-10 receipts | Valid User | 9 | 7.14 |
+| More than 10 receipts | Valid User | 6 | 4.77 |
+
+Key observations:
+- Most users (35.71%) have not submitted any receipts
+- Only a small percentage (4.77%) of users are highly active with more than 10 receipts
+- The majority of active users (52.38%) have between 1-5 receipts
 
 ## Data Quality Findings
 [Add your data quality findings here]
