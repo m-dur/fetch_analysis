@@ -259,7 +259,7 @@ order by 1;
 
 ## Query Results
 
-### Top 5 Brands by Month (Sample Results)
+### Top 5 Brands by Month
 
 | scan_month | brand_name | receipt_count | total_spend | avg_spend_per_receipt | brand_status | month_rank |
 |------------|------------|---------------|-------------|----------------------|--------------|------------|
@@ -268,10 +268,14 @@ order by 1;
 | 2021-01-01 | BEN AND JERRYS | 32 | $7,264.59 | $227.02 | missing from brands table | 1 |
 | 2021-01-01 | FOLGERS | 23 | $599.29 | $26.06 | missing from brands table | 2 |
 | 2021-01-01 | Pepsi | 23 | $848.94 | $36.91 | valid brand | 3 |
+| 2021-01-01 | KELLOGG'S | 22 | $117.07 | $5.32 | missing from brands table | 4 |
+| 2021-01-01 | Kraft | 22 | $133.53 | $6.07 | valid brand | 5 |
 
 Key observations:
 - BEN AND JERRYS had the highest spend per receipt ($227.02) in January 2021
-- Several major brands (BEN AND JERRYS, FOLGERS) are missing from the brands table
+- Several major brands (BEN AND JERRYS, FOLGERS, KELLOGG'S) are missing from the brands table
+- Tied receipt counts (e.g., FOLGERS and Pepsi with 23, KELLOGG'S and Kraft with 22) are ranked sequentially
+- February 2021 shows significantly lower activity with only 2 brands meeting the criteria
 
 ### Average Spend by Receipt Status
 | rewardsreceiptstatus | receipt_count | avg_spend |
@@ -316,4 +320,82 @@ Key observations:
 - The majority of active users (52.38%) have between 1-5 receipts
 
 ## Data Quality Findings
-[Add your data quality findings here]
+
+### Summary of Data Quality Issues
+```sql
+select 
+    'missing brands' as issue_type,
+    count(*) as total_count,
+    sum(occurrence_count) as total_occurrences,
+    min(first_seen) as earliest_seen,
+    max(last_seen) as latest_seen
+from missing_brands
+union all
+select 
+    'missing users' as issue_type,
+    count(*) as total_count,
+    sum(occurrence_count) as total_occurrences,
+    min(first_seen) as earliest_seen,
+    max(last_seen) as latest_seen
+from missing_users;
+```
+
+| issue_type | total_count | total_occurrences | earliest_seen | latest_seen |
+|------------|-------------|-------------------|---------------|-------------|
+| missing brands | 187 | 1972 | 2025-01-24 01:29:17 | 2025-01-24 01:29:19 |
+| missing users | 117 | 148 | 2025-01-24 01:29:17 | 2025-01-24 01:29:17 |
+
+Key findings:
+- 187 unique brands are missing from the brands table, with 1,972 total occurrences
+- 117 users referenced in receipts are missing from the users table, with 148 total occurrences
+- All data quality issues were detected within a 2-second window
+
+### Receipt Status Distribution
+```sql
+select 
+    rewardsreceiptstatus,
+    count(*) as receipt_count,
+    round(count(*)::numeric / sum(count(*)) over () * 100, 2) as percentage
+from receipts
+group by rewardsreceiptstatus
+order by receipt_count desc;
+```
+
+| rewardsreceiptstatus | receipt_count | percentage |
+|---------------------|---------------|------------|
+| FINISHED | 518 | 46.25 |
+| SUBMITTED | 434 | 38.75 |
+| REJECTED | 71 | 6.34 |
+| PENDING | 50 | 4.46 |
+| FLAGGED | 46 | 4.11 |
+
+Key findings:
+- Nearly half (46.25%) of all receipts are in FINISHED status
+- A significant portion (38.75%) remain in SUBMITTED status
+- Relatively low rejection rate at 6.34%
+- Small percentage of receipts require additional review (FLAGGED: 4.11%)
+
+### Missing Brand Codes Analysis
+```sql
+select 
+    case when brandcode is null then 'NULL'
+         else brandcode 
+    end as brandcode_status,
+    count(*) as item_count,
+    round(count(*)::numeric / sum(count(*)) over () * 100, 2) as percentage
+from rewardsreceiptitemlist
+group by brandcode_status
+order by item_count desc;
+```
+
+Key findings:
+- Significant number of items missing brand codes
+- Data quality issue affects brand analysis accuracy
+- Opportunity to improve brand code capture during receipt processing
+
+### Overall Data Quality Recommendations:
+1. Implement validation for brand references before receipt processing
+2. Review user registration process to prevent missing user records
+3. Investigate high number of SUBMITTED status receipts
+4. Consider automated brand code matching system
+5. Add data quality monitoring for real-time issue detection
