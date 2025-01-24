@@ -3,6 +3,20 @@
 ## Entity Relationship Diagram
 See [ERD](Diagrams/ERD.md) for the database schema visualization.
 
+The ERD illustrates the core tables (CATEGORIES, BRANDS, USERS, RECEIPTS, REWARDSRECEIPTITEMLIST) and their relationships, as well as two exception tracking tables designed to monitor referential integrity:
+
+1. **Core Tables**:
+   - CATEGORIES ─ BRANDS: One-to-many relationship for brand categorization
+   - USERS ─ RECEIPTS: One-to-many relationship for receipt submissions
+   - RECEIPTS ─ REWARDSRECEIPTITEMLIST: One-to-many relationship for receipt items
+   - BRANDS ─ REWARDSRECEIPTITEMLIST: Optional relationship for brand references
+
+2. **Exception Tables**:
+   - MISSING_BRANDS: Tracks brandcodes that appear in REWARDSRECEIPTITEMLIST but don't exist in BRANDS table
+   - MISSING_USERS: Tracks user IDs that appear in RECEIPTS but don't exist in USERS table
+
+This design enables both operational functionality and data quality monitoring, allowing the system to continue processing receipts while tracking referential integrity issues for later resolution.
+
 ## Database Schema
 ```sql
 -- Categories table
@@ -399,3 +413,106 @@ Key findings:
 3. Investigate high number of SUBMITTED status receipts
 4. Consider automated brand code matching system
 5. Add data quality monitoring for real-time issue detection
+
+## Database Design Rationale
+
+### Exception Table Design
+The database schema includes two exception tables (`missing_brands` and `missing_users`) specifically designed to track and monitor data quality issues:
+
+```sql
+CREATE TABLE missing_brands (
+    missing_brands_id SERIAL PRIMARY KEY,
+    brandcode VARCHAR(255) UNIQUE,
+    occurrence_count INTEGER DEFAULT 0,
+    first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE missing_users (
+    missing_users_id SERIAL PRIMARY KEY,
+    user_id VARCHAR(24) UNIQUE,
+    occurrence_count INTEGER DEFAULT 0,
+    first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## Business Communication
+
+Dear Product Team,
+
+I've completed an analysis of our receipt processing system's data quality and would like to share some key findings and questions.
+
+### Key Findings
+1. **Brand Reference Issues**
+   - We found 187 different brands in customer receipts that aren't in our brands database
+   - These missing brands appear 1,972 times across all receipts
+   - Major brands like BEN AND JERRYS, FOLGERS, and KELLOGG'S are among those missing
+
+2. **User Data Gaps**
+   - 117 receipts are linked to user IDs that don't exist in our user database
+   - This affects about 148 transactions total
+
+3. **Receipt Processing Status**
+   - 46% of receipts are fully processed (FINISHED)
+   - 39% remain in SUBMITTED status
+   - 15% are in various review states (FLAGGED, PENDING, or REJECTED)
+
+### Questions About the Data
+1. Is there an automated process for adding new brands to our database?
+2. Are the missing users due to account deletions, or were they never created?
+3. Why do we have such a high percentage of SUBMITTED status receipts?
+4. Should certain high-value brands (like BEN AND JERRYS) be prioritized for data cleanup?
+
+### Data Quality Discovery Process
+I implemented tracking tables to monitor:
+- Brand codes appearing in receipts but missing from our brands table
+- User IDs in receipts that don't exist in our users table
+This allowed us to quantify and track these issues over time.
+
+### Information Needed for Resolution
+1. **For Brand Issues:**
+   - Source of truth for official brand names and codes
+   - Process for brand validation during receipt scanning
+   - Guidelines for handling store-specific or regional brand variations
+
+2. **For User Issues:**
+   - User account lifecycle documentation
+   - Account deletion/deactivation processes
+   - User ID assignment protocol
+
+### Optimization Opportunities
+Additional information needed:
+1. Expected growth in receipt volume
+2. Peak processing times/seasons
+3. SLA requirements for receipt processing
+4. Reporting requirements for brand analytics
+5. User engagement metrics goals
+
+### Performance and Scaling Considerations
+Current concerns:
+1. **High Volume of Unprocessed Receipts**
+   - 39% of receipts in SUBMITTED status
+   - Need to understand processing bottlenecks
+
+2. **Database Performance**
+   - Implemented indexes on frequently joined columns
+   - May need partitioning for historical data
+   - Consider caching for common brand lookups
+
+3. **Data Quality Monitoring**
+   - Real-time tracking of missing references
+   - Automated alerts for data quality thresholds
+   - Regular cleanup job scheduling
+
+Proposed Solutions:
+1. Implement brand validation during receipt submission
+2. Add automated brand matching using fuzzy matching
+3. Create a brand management API for real-time updates
+4. Set up monitoring dashboards for data quality metrics
+
+Would you like to schedule a meeting to discuss these findings and next steps?
+
+Best regards,
+Miguel 
+
